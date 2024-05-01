@@ -8,7 +8,8 @@ using UnityEngine;
 using Utilities;
 //hello 
 //buddies
-// Why are you so serious?
+//Why are you so serious?
+//It's not your deal!
 //How are you?
 //i'm fine
 namespace Controller
