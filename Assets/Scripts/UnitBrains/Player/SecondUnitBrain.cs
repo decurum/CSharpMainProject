@@ -65,8 +65,11 @@ namespace UnitBrains.Player
                     closer = certainAim;
                 }
             }
-            result.Clear();
-            result.Add(closer);
+            if (aim != float.MaxValue)
+            {
+                result.Clear();
+                result.Add(closer);
+            }
             //while (result.Count > 1)
             //{
             //    result.RemoveAt(result.Count - 1);
