@@ -5,6 +5,7 @@ using Codice.Client.BaseCommands.CheckIn.CodeReview;
 using Model;
 using Model.Runtime.Projectiles;
 using UnityEngine;
+using static UnityEditor.Experimental.AssetDatabaseExperimental.AssetDatabaseCounters;
 
 namespace UnitBrains.Player
 {
@@ -16,7 +17,12 @@ namespace UnitBrains.Player
         private float _temperature = 0f;
         private float _cooldownTime = 0f;
         private bool _overheated;
-        
+
+        public static int unitCalculate = 0;
+        public int unitMarks = unitCalculate++;
+        public const int MaxAimnsForSmartChoiсe = 3;
+        private List<Vector2Int> NoAnyAims = new List<Vector2Int>();
+
         protected override void GenerateProjectiles(Vector2Int forTarget, List<BaseProjectile> intoList)
         {
             float overheatTemperature = OverheatTemperature;
@@ -54,46 +60,36 @@ namespace UnitBrains.Player
             ///////////////////////////////////////
             // Homework 1.4 (1st block, 4rd module)
             ///////////////////////////////////////
-            ////////List<Vector2Int> result = GetReachableTargets();
-            ////////float aim = float.MaxValue;
-            ////////Vector2Int closer = Vector2Int.zero;
-            //////////foreach (var certainAim in result) { float z = DistanceToOwnBase(certainAim); if (z < aim) {aim = z; closer = certainAim;}}
-            //////////if (aim != float.MaxValue) {  result.Clear(); result.Add(closer);}
-            //////////while (result.Count > 1) //{ //    result.RemoveAt(result.Count - 1); //}
-            ////////return result;
-
-            List<Vector2Int> searchAims = new();
-            List<Vector2Int> unfoundAims = new();
-            var allAims = GetAllTargets();
-            var nearest = float.MaxValue;
-            var rtM = runtimeModel.RoMap.Bases;
-            
-            if (!allAims.Any())
+            //DZ_7//
+            List<Vector2Int> result = new List<Vector2Int>();
+            List<Vector2Int> allTargets = (List<Vector2Int>)GetAllTargets();
+            List<Vector2Int> reachableTargets = new List<Vector2Int>();
+            NoAnyAims.Clear();
+            foreach (Vector2Int v2 in allTargets)
             {
-                searchAims.Add(rtM [IsPlayerUnitBrain ? Model.RuntimeModel.BotPlayerId : Model.RuntimeModel.PlayerId]);
-                return searchAims;
-            }
-            Vector2Int nearestAim = new Vector2Int(int.MinValue, int.MinValue);
-            foreach (var target in allAims)
-            {
-                var aimPath = DistanceToOwnBase(target);
-                if (aimPath < nearest)
+                if (IsTargetInRange(v2))
                 {
-                    nearest = aimPath;
-                    nearestAim = target;
+                    reachableTargets.Add(v2);
+                }
+                else
+                {
+                    NoAnyAims.Add(v2);
                 }
             }
-            if (nearest != float.MaxValue)
+            if (allTargets.Count == 0 || reachableTargets.Count == 0)
             {
-                unfoundAims.Add(nearestAim);
-                if (IsTargetInRange(nearestAim))
-                {
-                    searchAims.Add(nearestAim);
-                }
+                Vector2Int enemyBase = runtimeModel.RoMap.Bases[IsPlayerUnitBrain ? RuntimeModel.BotPlayerId : RuntimeModel.PlayerId];
+                result.Add(enemyBase);
+                return result;
             }
 
-            return searchAims;
-        }
+            SortByDistanceToOwnBase(reachableTargets);
+            int targetIndex = unitMarks % MaxAimnsForSmartChoiсe;
+            result.Add(reachableTargets[targetIndex]);
+            return result;
+            } 
+        
+
 
         public override void Update(float deltaTime, float time)
         {
